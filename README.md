@@ -1,56 +1,60 @@
 # AI Report Generator
 
-An AI-powered student performance reporting application that analyzes CSV datasets, calculates student and subject statistics, generates natural-language reports, and exports them as downloadable PDF documents.
-
-## Overview
-
-The AI Report Generator automates the process of analyzing student marks and preparing performance reports. It combines Python-based data analysis with a Large Language Model (LLM) to turn numerical results into readable summaries.
+A web-based application that analyzes CSV datasets, generates AI-assisted reports, and creates downloadable PDF summaries.
 
 ## Features
-
-- **CSV Data Processing:** Upload student marks using a CSV file.
-- **Performance Analytics:** Calculate student averages, subject averages, overall class average, and top-performing students.
-- **AI-Generated Reports:** Use the Mistral AI API to generate natural-language performance summaries.
-- **PDF Export:** Generate downloadable reports using FPDF.
-- **Email Automation:** Support report delivery through Gmail SMTP.
-- **Google Sheets Integration:** Log report summaries using the Google Sheets API.
-- **Analytics Dashboard:** Explore student performance through a separate Streamlit dashboard with interactive visualizations.
-
-*Note: External integrations require appropriate configuration and credentials. AI report generation depends on an active Mistral API account.*
+- Upload CSV files for analysis.
+- Calculate student and subject performance statistics using pandas.
+- Generate natural-language reports using Mistral AI.
+- Export reports as PDF files.
+- Integrate Gmail for email delivery and Google Sheets for logging.
 
 ## Tech Stack
+Python · FastAPI · pandas · Mistral AI · FPDF · Google Sheets API · Gmail SMTP · HTML · CSS · JavaScript
 
-| Component | Technologies |
-|---|---|
-| Language | Python |
-| Backend | FastAPI, Uvicorn |
-| Data Analysis | pandas |
-| AI | Mistral AI API |
-| PDF Generation | FPDF |
-| Email | Gmail SMTP |
-| Logging | Google Sheets API v4 |
-| Frontend | HTML, CSS, JavaScript |
-| Dashboard | Streamlit, Plotly |
+## Getting Started
 
-## Architecture
+**1. Clone the repository**
+```bash
+git clone https://github.com/negisaatvik3-bit/ai-report-generator.git
+cd ai-report-generator
+```
 
-1. Upload a CSV file through the web interface.
-2. FastAPI receives the file and initiates processing.
-3. pandas calculates student and subject performance statistics.
-4. The Mistral AI API generates a written performance summary.
-5. FPDF converts the report into a PDF document.
-6. The application provides a report download link and can optionally send the report by email and log summary details to Google Sheets.
+**2. Create a virtual environment**
+```bash
+python -m venv .venv
+```
+
+Activate it on Windows:
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+**3. Install dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+**4. Configure environment variables**
+
+Set up your Mistral API key and, if using the integrations, your Gmail app password and Google service-account credentials. Never commit secrets to GitHub.
+
+**5. Run the application**
+```bash
+uvicorn main:app --reload
+```
+
+Open http://127.0.0.1:8000 in your browser.
 
 ## Project Structure
+- `main.py` — FastAPI application and endpoints
+- `pipeline.py` — Data analysis and PDF report generation
+- `automation.py` — Email and Google Sheets integrations
+- `dashboard.py` — Streamlit dashboard
+- `static/` — Web interface
+- `data/` — Sample dataset
 
-```text
-ai-report-generator/
-├── main.py
-├── pipeline.py
-├── automation.py
-├── dashboard.py
-├── requirements.txt
-├── requirements copy.txt
-├── ai_report_generator_docs.docx
-├── data/
-│   └── students
+## Author
+**Saatvik Negi**
+
+[GitHub Repository](https://github.com/negisaatvik3-bit/ai-report-generator)
