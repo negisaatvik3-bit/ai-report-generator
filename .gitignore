@@ -1,0 +1,25 @@
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+service_account.json
+*service-account*.json
+credentials.json
+token.json
+.streamlit/secrets.toml
+
+# Generated files
+tmp/
+*.pdf
+
+# IDE and operating system
+.vscode/
+.DS_Store
+Thumbs.db

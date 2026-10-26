@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EduReport AI — Student Report Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f7f5f2;
+  --surface:  #ffffff;
+  --surface2: #f0ede8;
+  --border:   #e2ddd7;
+  --border2:  #cdc7bf;
+  --sage:     #5a7a5e;
+  --sage-lt:  #eaf1eb;
+  --sage-mid: #c5d9c7;
+  --amber:    #c47b2b;
+  --amber-lt: #fdf3e7;
+  --rose:     #b5534a;
+  --rose-lt:  #fceeed;
+  --ink:      #2d2926;
+  --ink2:     #5c544c;
+  --muted:    #9a9189;
+  --shadow:   rgba(45,41,38,0.06);
+  --shadow2:  rgba(45,41,38,0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* ── SUBTLE PAPER TEXTURE ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+/* ── PAGE LAYOUT ── */
+.page {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+/* ── TOP NAV ── */
+.nav {
+  padding: 18px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  background: rgba(247,245,242,0.92);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.nav-icon {
+  width: 34px; height: 34px;
+  background: var(--sage);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.nav-name {
+  font-family: 'Lora', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+
+.nav-tag { display: none; }
+
+.nav-status {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px;
+  color: var(--sage);
+  font-weight: 500;
+}
+
+.nav-status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--sage);
+  animation: breathe 3s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.85); }
+}
+
+/* ── MAIN ── */
+.main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 32px;
+  padding: 52px 40px 80px;
+  max-width: 1100px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ── LEFT COLUMN ── */
+.left-col {
+  flex: 1;
+  max-width: 520px;
+  animation: riseUp 0.5s ease both;
+}
+
+@keyframes riseUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PAGE TITLE ── */
+.page-title {
+  margin-bottom: 32px;
+}
+
+.page-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.page-eyebrow::before {
+  content: '';
+  width: 20px; height: 1.5px;
+  background: var(--sage);
+  border-radius: 1px;
+}
+
+.page-title h1 {
+  font-family: 'Lora', serif;
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.page-title h1 em {
+  font-style: italic;
+  color: var(--sage);
+}
+
+.page-title p {
+  font-size: 14px;
+  color: var(--ink2);
+  font-weight: 400;
+  line-height: 1.65;
+  max-width: 420px;
+}
+
+/* ── FORM CARD ── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px var(--shadow), 0 1px 2px var(--shadow);
+  overflow: hidden;
+}
+
+/* ── SECTION TABS ── */
+.form-section {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.form-section:last-child { border-bottom: none; }
+
+.section-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.section-num {
+  width: 20px; height: 20px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── DROP ZONE ── */
+.dropzone {
+  border: 1.5px dashed var(--border2);
+  border-radius: 12px;
+  padding: 32px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .25s ease;
+  position: relative;
+  background: var(--surface2);
+}
+
+.dropzone:hover, .dropzone.drag {
+  border-color: var(--sage);
+  background: var(--sage-lt);
+  box-shadow: 0 0 0 4px rgba(90,122,94,0.08);
+}
+
+.dropzone input {
+  position: absolute; inset: 0;
+  opacity: 0; cursor: pointer;
+  width: 100%; height: 100%;
+}
+
+.dz-icon-wrap {
+  width: 52px; height: 52px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  margin: 0 auto 14px;
+  transition: all .25s;
+  box-shadow: 0 2px 8px var(--shadow);
+}
+
+.dropzone:hover .dz-icon-wrap,
+.dropzone.drag  .dz-icon-wrap {
+  border-color: var(--sage-mid);
+  background: var(--sage-lt);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(90,122,94,0.15);
+}
+
+.dz-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.dz-hint {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.dz-csv-hint {
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.03em;
+}
+
+.dz-file {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--sage);
+  font-weight: 600;
+}
+
+/* ── FIELDS ── */
+.field { margin-bottom: 16px; }
+.field:last-child { margin-bottom: 0; }
+
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  margin-bottom: 7px;
+  letter-spacing: 0.01em;
+}
+
+.field-opt {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.field input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  outline: none;
+  transition: all .2s;
+}
+
+.field input:focus {
+  border-color: var(--sage);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(90,122,94,0.1);
+}
+
+.field input::placeholder { color: var(--muted); font-weight: 400; }
+
+.field-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.55;
+}
+
+.field-hint strong { color: var(--ink2); }
+
+/* ── SUBMIT BUTTON ── */
+.submit-wrap {
+  padding: 20px 28px 24px;
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 14px 24px;
+  border: none;
+  border-radius: 10px;
+  background: var(--sage);
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all .25s ease;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0) 30%, rgba(255,255,255,0.1));
+  opacity: 0; transition: opacity .25s;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: #4a6a4e;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(90,122,94,0.3);
+}
+
+.submit-btn:hover:not(:disabled)::after { opacity: 1; }
+.submit-btn:active:not(:disabled) { transform: translateY(0); }
+
+.submit-btn:disabled {
+  background: var(--border2);
+  color: var(--muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ── PROGRESS ── */
+.progress-wrap {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-top: 14px;
+  display: none;
+  overflow: hidden;
+}
+
+.progress-wrap.show { display: block; }
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--sage), #7dab82);
+  width: 0%;
+  transition: width .4s ease;
+  border-radius: 2px;
+}
+
+/* ── STATUS ── */
+.status {
+  min-height: 20px;
+  margin-top: 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+}
+
+.spinner {
+  width: 13px; height: 13px;
+  border: 2px solid var(--border);
+  border-top-color: var(--sage);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.err-txt { color: var(--rose); }
+.ok-txt  { color: var(--sage); font-weight: 600; }
+
+/* ── RESULTS ── */
+.results {
+  display: none;
+  margin-top: 20px;
+  animation: riseUp .4s ease both;
+}
+
+.results.show { display: block; }
+
+.results-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px var(--shadow);
+  overflow: hidden;
+}
+
+.results-header {
+  padding: 18px 24px;
+  background: var(--sage-lt);
+  border-bottom: 1px solid var(--sage-mid);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.results-header-title {
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sage);
+}
+
+.results-header-sub {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.results-body { padding: 20px 24px; }
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.stat {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  transition: box-shadow .2s;
+}
+
+.stat:hover { box-shadow: 0 4px 12px var(--shadow2); }
+
+.stat-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 5px;
+}
+
+.stat-val {
+  font-family: 'Lora', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1;
+}
+
+.stat-val.sage  { color: var(--sage); }
+.stat-val.amber { color: var(--amber); }
+
+/* ── WEAK ROW ── */
+.weak-row {
+  background: var(--amber-lt);
+  border: 1px solid rgba(196,123,43,0.2);
+  border-radius: 8px;
+  padding: 11px 14px;
+  margin-bottom: 14px;
+  font-size: 12px;
+  color: var(--amber);
+  display: none;
+}
+
+.weak-row.show { display: block; }
+.weak-label { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 3px; color: var(--amber); opacity: 0.8; }
+
+/* ── AUTO LOG ── */
+.auto-log {
+  margin-bottom: 16px;
+}
+
+.auto-log-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.auto-items { display: flex; flex-direction: column; gap: 5px; }
+
+.auto-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.auto-item.ok   { background: var(--sage-lt); color: var(--sage); }
+.auto-item.fail { background: var(--rose-lt); color: var(--rose); }
+
+.auto-icon { font-size: 13px; flex-shrink: 0; }
+
+/* ── DOWNLOAD ── */
+.dl-btn {
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  width: 100%;
+  padding: 13px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: 10px;
+  color: var(--ink2);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all .2s;
+}
+
+.dl-btn:hover {
+  border-color: var(--sage);
+  color: var(--sage);
+  background: var(--sage-lt);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(90,122,94,0.15);
+}
+
+/* ── RIGHT SIDEBAR ── */
+.right-col {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding-top: 76px;
+  animation: riseUp 0.5s ease 0.1s both;
+}
+
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 2px 12px var(--shadow);
+}
+
+.info-card-title {
+  font-family: 'Lora', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 7px;
+}
+
+.step-list { display: flex; flex-direction: column; gap: 11px; }
+
+.step-item {
+  display: flex; gap: 11px; align-items: flex-start;
+}
+
+.step-dot {
+  width: 22px; height: 22px;
+  background: var(--sage);
+  border-radius: 50%;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 1px;
+}
+
+.step-txt {
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.55;
+}
+
+.step-txt strong { color: var(--ink); font-weight: 600; }
+
+.tip-card {
+  background: var(--sage-lt);
+  border: 1px solid var(--sage-mid);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.tip-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 8px;
+}
+
+.tip-text {
+  font-size: 12px;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+/* ── FOOTER ── */
+.footer {
+  padding: 20px 40px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .main { flex-direction: column; align-items: center; padding: 32px 20px 60px; }
+  .right-col { width: 100%; max-width: 520px; padding-top: 0; flex-direction: row; flex-wrap: wrap; }
+  .info-card, .tip-card { flex: 1; min-width: 240px; }
+  .nav { padding: 14px 20px; }
+  .footer { padding: 16px 20px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <div class="nav-icon">🎓</div>
+      <div>
+        <div class="nav-name">AI Report Generator</div>
+      </div>
+    </div>
+    <div class="nav-status">
+      <div class="nav-status-dot"></div>
+      System ready
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- PAGE TITLE -->
+      <div class="page-title">
+        <div class="page-eyebrow">New Report</div>
+        <h1>Generate <em>student</em><br/>performance reports</h1>
+        <p>Upload your class results and receive AI-written individual reports, automatically logged to your records.</p>
+      </div>
+
+      <!-- FORM CARD -->
+      <div class="form-card">
+
+        <!-- SECTION 1: UPLOAD -->
+        <div class="form-section">
+          <div class="section-label">
+            <div class="section-num">1</div>
+            Upload your CSV file
+          </div>
+
+          <div class="dropzone" id="dropzone">
+            <input type="file" id="csv-input" accept=".csv"/>
+            <div class="dz-icon-wrap">📋</div>
+            <div class="dz-title">Drop your file here</div>
+            <div class="dz-hint">or click to browse</div>
+            <div class="dz-csv-hint">Student · Subject · Marks</div>
+            <div class="dz-file" id="filename"></div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: DETAILS -->
+        <div class="form-section">
+          <div class="section-label">
+            <div class="section-num">2</div>
+            Enter your details
+          </div>
+
+          <div class="field">
+            <label class="field-label">Your email address</label>
+            <input type="email" id="user-email" placeholder="teacher@school.com"/>
+          </div>
+
+          <div class="field">
+            <label class="field-label">
+              Google Sheets ID <span class="field-opt">— optional, for record keeping</span>
+            </label>
+            <input type="text" id="sheets-id" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs"/>
+            <div class="field-hint">
+              Open your Sheet → copy from the URL:<br/>
+              spreadsheets/d/<strong>this part here</strong>/edit
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBMIT -->
+        <div class="submit-wrap">
+          <button class="submit-btn" id="btn" onclick="generate()" disabled>
+            <span>✦</span>
+            <span>Generate Reports</span>
+          </button>
+
+          <div class="progress-wrap" id="progress-wrap">
+            <div class="progress-bar" id="progress-bar"></div>
+          </div>
+
+          <div class="status" id="status"></div>
+        </div>
+
+      </div>
+
+      <!-- RESULTS -->
+      <div class="results" id="results">
+        <div class="results-card">
+          <div class="results-header">
+            <div class="results-header-title">✦ Report Complete</div>
+            <div class="results-header-sub" id="result-time">—</div>
+          </div>
+          <div class="results-body">
+
+            <div class="stat-grid">
+              <div class="stat">
+                <div class="stat-label">Class Average</div>
+                <div class="stat-val" id="r-avg">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Top Student</div>
+                <div class="stat-val sage" id="r-top" style="font-size:16px;padding-top:3px">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Top Score</div>
+                <div class="stat-val sage" id="r-score">—</div>
+              </div>
+              <div class="stat">
+                <div class="stat-label">Weak Subjects</div>
+                <div class="stat-val amber" id="r-weak">—</div>
+              </div>
+            </div>
+
+            <div class="weak-row" id="weak-row">
+              <div class="weak-label">⚠ Subjects below class average</div>
+              <div id="weak-list"></div>
+            </div>
+
+            <div class="auto-log">
+              <div class="auto-log-title">Automation log</div>
+              <div class="auto-items" id="auto-items"></div>
+            </div>
+
+            <a class="dl-btn" id="dl-btn" href="#" download>
+              <span>⬇</span>
+              <span>Download PDF Report</span>
+            </a>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT SIDEBAR -->
+    <div class="right-col">
+
+      <div class="info-card">
+        <div class="info-card-title">✦ What happens next</div>
+        <div class="step-list">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-txt"><strong>Data analysis</strong> — class averages, rankings, and subject insights computed instantly</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-txt"><strong>AI writing</strong> — a personalised 3-paragraph report written for each student</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-txt"><strong>PDF created</strong> — colour-coded marks table, strengths, recommendations</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">4</div>
+            <div class="step-txt"><strong>Records logged</strong> — all data saved to your Google Sheet automatically</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip-card">
+        <div class="tip-label">📌 CSV Format</div>
+        <div class="tip-text">
+          Your file needs three columns:<br/><br/>
+          <strong>Student</strong> — student full name<br/>
+          <strong>Subject</strong> — subject name<br/>
+          <strong>Marks</strong> — numerical score<br/><br/>
+          Each row is one subject result for one student.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <span>AI Report Generator</span>
+    <span id="gen-info">Ready to generate</span>
+  </footer>
+
+</div>
+
+<script>
+  const input    = document.getElementById('csv-input');
+  const btn      = document.getElementById('btn');
+  const filename = document.getElementById('filename');
+  const dropzone = document.getElementById('dropzone');
+  const status   = document.getElementById('status');
+  const results  = document.getElementById('results');
+  const progressWrap = document.getElementById('progress-wrap');
+  const progressBar  = document.getElementById('progress-bar');
+
+  function checkReady() {
+    const hasFile  = input.files && input.files[0];
+    const hasEmail = document.getElementById('user-email').value.trim();
+    btn.disabled   = !(hasFile && hasEmail);
+  }
+
+  input.addEventListener('change', () => {
+    if (input.files[0]) {
+      filename.textContent = '✓ ' + input.files[0].name;
+      checkReady();
+    }
+  });
+
+  document.getElementById('user-email').addEventListener('input', checkReady);
+
+  dropzone.addEventListener('dragover',  e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('drag');
+    input.files = e.dataTransfer.files;
+    input.dispatchEvent(new Event('change'));
+  });
+
+  function startProgress() {
+    progressWrap.classList.add('show');
+    progressBar.style.width = '0%';
+    let w = 0;
+    const iv = setInterval(() => {
+      w += Math.random() * 8;
+      if (w > 85) { clearInterval(iv); return; }
+      progressBar.style.width = w + '%';
+    }, 350);
+    return iv;
+  }
+
+  async function generate() {
+    const file     = input.files[0];
+    const email    = document.getElementById('user-email').value.trim();
+    const sheetsId = document.getElementById('sheets-id').value.trim();
+    if (!file || !email) return;
+
+    btn.disabled = true;
+    results.classList.remove('show');
+    status.innerHTML = '<span class="spinner"></span> Analysing data and writing reports…';
+
+    const iv = startProgress();
+    const t0 = Date.now();
+
+    const formData = new FormData();
+    formData.append('file',         file);
+    formData.append('email',        email);
+    formData.append('drive_folder', '');
+    formData.append('sheets_id',    sheetsId);
+
+    try {
+      const res  = await fetch('/upload', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Upload failed');
+
+      clearInterval(iv);
+      progressBar.style.width = '100%';
+      setTimeout(() => { progressWrap.classList.remove('show'); }, 600);
+
+      const s = data.summary;
+      const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
+
+      document.getElementById('r-avg').textContent   = s.overall_average;
+      document.getElementById('r-top').textContent   = s.top_student;
+      document.getElementById('r-score').textContent = s.top_score;
+      document.getElementById('result-time').textContent = `Generated in ${elapsed}s`;
+      document.getElementById('gen-info').textContent = `Last run: ${elapsed}s`;
+
+      const weakKeys = Object.keys(s.weak_subjects);
+      document.getElementById('r-weak').textContent = weakKeys.length || '0';
+
+      if (weakKeys.length) {
+        document.getElementById('weak-list').textContent =
+          weakKeys.map(k => `${k} (${s.weak_subjects[k]})`).join(', ');
+        document.getElementById('weak-row').classList.add('show');
+      }
+
+      const autoItems = document.getElementById('auto-items');
+      autoItems.innerHTML = '';
+      data.automations.forEach(a => {
+        const div = document.createElement('div');
+        div.className = `auto-item ${a.ok ? 'ok' : 'fail'}`;
+        div.innerHTML = `<span class="auto-icon">${a.ok ? '✓' : '✗'}</span><span>${a.label}</span>`;
+        autoItems.appendChild(div);
+      });
+
+      document.getElementById('dl-btn').href = data.download_url;
+      status.innerHTML = `<span class="ok-txt">✦ All done — reports ready</span>`;
+      results.classList.add('show');
+      results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (err) {
+      clearInterval(iv);
+      progressWrap.classList.remove('show');
+      status.innerHTML = `<span class="err-txt">✕ ${err.message}</span>`;
+    } finally {
+      btn.disabled = false;
+    }
+  }
+</script>
+</body>
+</html>
